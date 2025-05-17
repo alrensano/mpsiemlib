@@ -56,21 +56,24 @@ class MPSIEMAuth(AuthInterface, LoggingHandler):
         """Аутентификация в MC через токены."""
 
         url = f'https://{self.creds.core_hostname}:{self.__ms_port}{self.__token_uri}'
-        payload = dict(grant_type='password', client_id='ptkb', client_secret=self.creds.client_secret,
+        payload = dict(grant_type='password', client_id='mpx', client_secret=self.creds.client_secret,
                        scope='authorization offline_access mpx.api ptkb.api idmgr.api',
                        response_type='code id_token token', username=self.creds.core_login,
                        password=self.creds.core_pass)
         
         try:
-            response = requests.post(url, data=payload, verify=False)
-            response.raise_for_status()
+            r = exec_request(self.__session,
+                             url,
+                             timeout=self.settings.connection_timeout,
+                             method='POST',
+                             json=payload)
+            r.raise_for_status()
+            token = r.json().get('access_token')
+            return token
+        
         except requests.HTTPError as e:
-            print(f"[!] Error: {e}")
-            print(e.response.json())
-        
-        token = response.json().get('access_token')
-        
-        return token
+            self.log.error('hostname="{}", url={}, status=failed, action=get_token, msg="{}"'.
+                               format(self.creds.core_hostname, url, e.response.json()))
 
     def set_auth_header(self, token):
         """Установка токена bearer."""
