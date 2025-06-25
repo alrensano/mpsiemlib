@@ -104,7 +104,7 @@ class MPSIEMAuth(AuthInterface, LoggingHandler):
         else:
             raise NotImplementedError(f"Unsupported component for Auth {component}")
 
-        self.set_auth_header(token=self.get_token())
+        # self.set_auth_header(token=self.get_token())
 
         return self.__session
 
